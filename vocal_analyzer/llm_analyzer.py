@@ -47,6 +47,6 @@ class LLMAnalyzer:
             "Focus on the musical characteristics, vocal techniques, and style elements."
         )
         response = openai.ChatCompletion.create(
-            model="gpt-4", messages=[{"role": "user", "content": prompt}]
+            model="gpt-4.1-nano", messages=[{"role": "user", "content": prompt}]
         )
         return response["choices"][0]["message"]["content"]
