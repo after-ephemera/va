@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: vocal-analyzer
+Version: 0.1.0
+Summary: A tool to analyze vocals from audio files
+Requires-Python: <=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: spleeter
+Requires-Dist: librosa
+Requires-Dist: openai
+Requires-Dist: matplotlib
+Requires-Dist: numpy

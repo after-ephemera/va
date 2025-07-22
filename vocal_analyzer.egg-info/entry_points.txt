@@ -1,0 +1,2 @@
+[console_scripts]
+va = vocal_analyzer.main:main
