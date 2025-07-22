@@ -1,5 +1,0 @@
-spleeter
-librosa
-openai
-matplotlib
-numpy

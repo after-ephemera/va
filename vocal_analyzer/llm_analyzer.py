@@ -10,11 +10,17 @@ class LLMAnalyzer:
 
     def analyze(self):
         """Craft a prompt and query the LLM for vocal style analysis."""
+        # Convert NumPy values to Python floats for proper formatting
+        min_pitch = float(self.features["min_pitch"])
+        max_pitch = float(self.features["max_pitch"])
+        mean_pitch = float(self.features["mean_pitch"])
+        tempo = float(self.features["tempo"])
+
         prompt = (
             f"Analyze the vocal style of this song based on the following information:\n"
-            f"- Tempo: {self.features['tempo']:.2f} BPM\n"
-            f"- Pitch range: {self.features['min_pitch']:.2f} to {self.features['max_pitch']:.2f} Hz\n"
-            f"- Average pitch: {self.features['mean_pitch']:.2f} Hz\n"
+            f"- Tempo: {tempo:.2f} BPM\n"
+            f"- Pitch range: {min_pitch:.2f} to {max_pitch:.2f} Hz\n"
+            f"- Average pitch: {mean_pitch:.2f} Hz\n"
             f"- Lyrics: {self.transcription}\n"
         )
         if self.features["screaming"]:

@@ -3,8 +3,16 @@ name = "vocal-analyzer"
 version = "0.1.0"
 description = "A tool to analyze vocals from audio files"
 readme = "README.md"
-requires-python = ">3.8,<=3.9"
-dependencies = ["spleeter", "librosa", "openai", "matplotlib", "numpy"]
+requires-python = ">=3.11"
+dependencies = [
+    "audio-separator",
+    "onnxruntime",
+    "librosa",
+    "openai",
+    "matplotlib",
+    "numpy<2.0",
+    "llvmlite==0.44.0",
+]
 
 [project.scripts]
 va = "vocal_analyzer.main:main"
