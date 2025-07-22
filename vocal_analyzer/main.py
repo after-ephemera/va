@@ -21,7 +21,7 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="model_bs_roformer_ep_317_sdr_12.9755.ckpt",
+        default="htdemucs_6s.yaml",
         help="Model to use for separation (default: model_bs_roformer_ep_317_sdr_12.9755.ckpt)",
     )
     parser.add_argument(
@@ -79,9 +79,14 @@ def main():
         return
 
     # Set output directory
-    output_dir = (
-        args.output_dir if args.output_dir else os.path.dirname(args.input_file)
-    )
+    if args.output_dir:
+        output_dir = args.output_dir
+    else:
+        # Create analysis subdirectory next to original file
+        input_dir = os.path.dirname(args.input_file)
+        input_basename = os.path.splitext(os.path.basename(args.input_file))[0]
+        output_dir = os.path.join(input_dir, f"{input_basename}-analysis")
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

@@ -31,7 +31,5 @@ def generate_output(output_dir, range_results, llm_results, input_file):
 
         if range_results["plot_file"]:
             plot_filename = os.path.basename(range_results["plot_file"])
-            f.write(
-                f'<image-card alt="Pitch Distribution" src="{plot_filename}" ></image-card>\n'
-            )
+            f.write(f"![Pitch Distribution]({plot_filename})\n")
     return analysis_file

@@ -69,9 +69,7 @@ def extract_vocals(input_file, output_dir):
         raise Exception(f"Vocal extraction failed: {str(e)}")
 
 
-def extract_all_stems(
-    input_file, output_dir, model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt"
-):
+def extract_all_stems(input_file, output_dir, model_filename="htdemucs_6s.yaml"):
     """Extract all available stems from an audio file using audio-separator.
 
     Args:
