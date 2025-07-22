@@ -16,17 +16,35 @@ class LLMAnalyzer:
         mean_pitch = float(self.features["mean_pitch"])
         tempo = float(self.features["tempo"])
 
+        # Get note information
+        min_note = self.features.get("min_note", "N/A")
+        max_note = self.features.get("max_note", "N/A")
+        mean_note = self.features.get("mean_note", "N/A")
+
         prompt = (
             f"Analyze the vocal style of this song based on the following information:\n"
             f"- Tempo: {tempo:.2f} BPM\n"
-            f"- Pitch range: {min_pitch:.2f} to {max_pitch:.2f} Hz\n"
-            f"- Average pitch: {mean_pitch:.2f} Hz\n"
-            f"- Lyrics: {self.transcription}\n"
         )
+
+        if min_note != "N/A" and max_note != "N/A":
+            prompt += (
+                f"- Vocal range: {min_note} to {max_note} "
+                f"({min_pitch:.2f} to {max_pitch:.2f} Hz)\n"
+                f"- Average pitch: {mean_note} ({mean_pitch:.2f} Hz)\n"
+            )
+        else:
+            prompt += (
+                f"- Pitch range: {min_pitch:.2f} to {max_pitch:.2f} Hz\n"
+                f"- Average pitch: {mean_pitch:.2f} Hz\n"
+            )
+
+        prompt += f"- Lyrics: {self.transcription}\n"
+
         if self.features["screaming"]:
             prompt += "- Includes extreme vocals, possibly screaming.\n"
         prompt += (
-            "Provide a detailed analysis of the vocal style, considering these aspects."
+            "Provide a detailed analysis of the vocal style, considering these aspects. "
+            "Focus on the musical characteristics, vocal techniques, and style elements."
         )
         response = openai.ChatCompletion.create(
             model="gpt-4", messages=[{"role": "user", "content": prompt}]
