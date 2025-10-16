@@ -6,6 +6,7 @@ from .feature_extractor import extract_features
 from .range_analyzer import RangeAnalyzer
 from .llm_analyzer import LLMAnalyzer
 from .output_generator import generate_output
+from .key_finder import find_key
 
 
 def main():
@@ -138,6 +139,9 @@ def main():
         # Extract features
         features = extract_features(vocal_file)
 
+        # Find musical key
+        key_info = find_key(args.input_file)
+
         # Initialize and run analyzers
         range_analyzer = RangeAnalyzer(vocal_file, output_dir)
         range_results = range_analyzer.analyze()
@@ -147,7 +151,7 @@ def main():
 
         # Generate output
         analysis_file = generate_output(
-            output_dir, range_results, llm_results, args.input_file
+            output_dir, range_results, llm_results, args.input_file, key_info
         )
 
         # Print summary

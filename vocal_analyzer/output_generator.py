@@ -1,7 +1,7 @@
 import os
 
 
-def generate_output(output_dir, range_results, llm_results, input_file):
+def generate_output(output_dir, range_results, llm_results, input_file, key_info):
     """Generate a Markdown file with analysis results."""
     base_name = os.path.splitext(os.path.basename(input_file))[0]
     analysis_file = os.path.join(output_dir, f"{base_name}_analysis.md")
@@ -15,6 +15,13 @@ def generate_output(output_dir, range_results, llm_results, input_file):
 
     with open(analysis_file, "w") as f:
         f.write(f"# Analysis of {input_file}\n\n")
+        
+        f.write("## Musical Key\n\n")
+        f.write(f"**Key:** {key_info['key']} (correlation: {key_info['correlation']:.3f})\n\n")
+        if key_info['alt_key'] is not None:
+            f.write(f"**Also possible:** {key_info['alt_key']} (correlation: {key_info['alt_correlation']:.3f})\n\n")
+        f.write("*Key detected using the Krumhansl-Schmuckler key-finding algorithm*\n\n")
+        
         f.write("## LLM Analysis\n\n")
         f.write(llm_results + "\n\n")
         f.write("## Range Analysis\n\n")
