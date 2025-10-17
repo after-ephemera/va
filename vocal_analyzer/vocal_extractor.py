@@ -2,6 +2,90 @@ import os
 from audio_separator.separator import Separator
 
 
+def _find_existing_vocal_file(output_dir, model_filename):
+    """Check if a vocal file from the specified model already exists in output dir.
+
+    Args:
+        output_dir (str): Directory to check
+        model_filename (str): Model filename to look for in file names
+
+    Returns:
+        str or None: Path to existing vocal file if found, None otherwise
+    """
+    if not os.path.exists(output_dir):
+        return None
+
+    # Extract a distinctive part of the model name for matching
+    # e.g., "model_bs_roformer_ep_317_sdr_12.9755.ckpt" -> "bs_roformer" or "htdemucs_6s"
+    model_id = model_filename.replace(".ckpt", "").replace(".yaml", "").replace("model_", "")
+
+    for file in os.listdir(output_dir):
+        if not file.endswith(".wav"):
+            continue
+
+        # Check if file contains both model identifier and "Vocals"
+        if model_id in file and ("Vocals" in file or "vocals" in file.lower()):
+            full_path = os.path.join(output_dir, file)
+            if os.path.exists(full_path):
+                return full_path
+
+    return None
+
+
+def _find_existing_stems(output_dir, model_filename, required_stems):
+    """Check if all required stems from the specified model already exist.
+
+    Args:
+        output_dir (str): Directory to check
+        model_filename (str): Model filename to look for in file names
+        required_stems (list): List of stem names to look for
+
+    Returns:
+        dict or None: Dictionary mapping stem names to file paths if all found, None otherwise
+    """
+    if not os.path.exists(output_dir):
+        return None
+
+    model_id = model_filename.replace(".ckpt", "").replace(".yaml", "").replace("model_", "")
+    found_stems = {}
+
+    for file in os.listdir(output_dir):
+        if not file.endswith(".wav"):
+            continue
+
+        # Only consider files from this model
+        if model_id not in file:
+            continue
+
+        # Try to match each required stem
+        for stem_name in required_stems:
+            if stem_name in found_stems:
+                continue
+
+            # Check various naming patterns
+            stem_patterns = [
+                f"_({stem_name.capitalize()})_",
+                f"({stem_name.capitalize()})",
+                f"_{stem_name.capitalize()}_",
+                f"_({stem_name.lower()})_",
+                f"({stem_name.lower()})",
+                f"_{stem_name.lower()}_",
+            ]
+
+            for pattern in stem_patterns:
+                if pattern in file:
+                    full_path = os.path.join(output_dir, file)
+                    if os.path.exists(full_path):
+                        found_stems[stem_name] = full_path
+                        break
+
+    # Only return if we found all required stems
+    if len(found_stems) == len(required_stems):
+        return found_stems
+
+    return None
+
+
 def extract_vocals(input_file, output_dir, model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt"):
     """Extract vocals from an audio file using audio-separator.
 
@@ -13,6 +97,12 @@ def extract_vocals(input_file, output_dir, model_filename="model_bs_roformer_ep_
     Returns:
         str: Path to the extracted vocal file
     """
+    # Check if vocal file already exists from this model
+    existing_vocal = _find_existing_vocal_file(output_dir, model_filename)
+    if existing_vocal:
+        print(f"Found existing vocal file from {model_filename}, skipping extraction: {os.path.basename(existing_vocal)}")
+        return existing_vocal
+
     # Initialize the separator with optimized settings for vocal extraction
     separator = Separator(
         model_file_dir="/tmp/audio-separator-models/",  # Cache models here
@@ -92,6 +182,25 @@ def extract_all_stems(input_file, output_dir, model_filename="htdemucs_6s.yaml")
         stems = extract_all_stems("song.mp3", "/output")
         # Returns: {"vocals": "/output/song_Vocals.wav", "instrumental": "/output/song_Instrumental.wav"}
     """
+    # Get information about what stems this model provides (before separation)
+    model_info = get_model_stem_info(model_filename)
+    if not model_info:
+        raise Exception(f"Could not find information for model {model_filename}")
+
+    # Parse stem names from the model info
+    available_stems = []
+    for stem_info in model_info["Stems"]:
+        stem_name = stem_info.split("(")[0].strip().rstrip("*").strip()
+        available_stems.append(stem_name)
+
+    # Check if all stems already exist from this model
+    existing_stems = _find_existing_stems(output_dir, model_filename, available_stems)
+    if existing_stems:
+        print(f"Found existing stems from {model_filename}, skipping extraction:")
+        for stem_name, file_path in existing_stems.items():
+            print(f"  {stem_name}: {os.path.basename(file_path)}")
+        return existing_stems
+
     # Initialize the separator WITHOUT output_single_stem to get all stems
     separator = Separator(
         model_file_dir="/tmp/audio-separator-models/",  # Cache models here

@@ -190,7 +190,7 @@ def main():
 
         # Generate output
         analysis_file = generate_output(
-            output_dir, range_results, llm_results, args.input_file, key_info
+            output_dir, range_results, llm_results, args.input_file, key_info, transcription
         )
 
         # Print summary
