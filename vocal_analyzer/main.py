@@ -165,8 +165,12 @@ def main():
         # Extract features (always needed for range analysis)
         features = extract_features(vocal_file)
 
-        # Find musical key
-        key_info = find_key(args.input_file)
+        # Find musical key if enabled
+        key_info = None
+        if config.is_enabled("key_detection"):
+            key_info = find_key(args.input_file)
+        elif not quiet:
+            print("Key detection disabled, skipping...")
 
         # Initialize and run range analyzer if enabled
         range_results = {}
