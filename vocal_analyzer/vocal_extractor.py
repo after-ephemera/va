@@ -2,8 +2,17 @@ import os
 from audio_separator.separator import Separator
 
 
-def extract_vocals(input_file, output_dir):
-    """Extract vocals from an audio file using audio-separator."""
+def extract_vocals(input_file, output_dir, model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt"):
+    """Extract vocals from an audio file using audio-separator.
+
+    Args:
+        input_file (str): Path to the input audio file
+        output_dir (str): Directory where output files will be saved
+        model_filename (str): Model to use for separation (defaults to high-quality roformer model)
+
+    Returns:
+        str: Path to the extracted vocal file
+    """
     # Initialize the separator with optimized settings for vocal extraction
     separator = Separator(
         model_file_dir="/tmp/audio-separator-models/",  # Cache models here
@@ -14,9 +23,8 @@ def extract_vocals(input_file, output_dir):
         sample_rate=44100,  # Standard sample rate
     )
 
-    # Load a high-quality vocal separation model (downloads automatically if needed)
-    # This model has excellent vocal separation performance
-    separator.load_model(model_filename="model_bs_roformer_ep_317_sdr_12.9755.ckpt")
+    # Load the specified vocal separation model (downloads automatically if needed)
+    separator.load_model(model_filename=model_filename)
 
     try:
         # Perform separation

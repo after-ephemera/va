@@ -1,0 +1,49 @@
+# Vocal Analyzer Configuration
+# Copy this file to config.toml and customize as needed
+
+# Feature toggles - enable or disable specific analysis features
+[features]
+vocal_extraction = true      # Extract vocals from audio
+transcription = true         # Transcribe lyrics using Whisper
+range_analysis = true        # Analyze vocal range and pitch
+llm_analysis = true         # Use LLM for style analysis
+pitch_visualization = true   # Generate pitch distribution plots
+
+# Vocal extraction settings
+[extraction]
+# Default model for stem separation
+# Options: htdemucs_6s.yaml, model_bs_roformer_ep_317_sdr_12.9755.ckpt, etc.
+model = "model_bs_roformer_ep_317_sdr_12.9755.ckpt"
+
+# Extract all stems instead of just vocals
+extract_all_stems = false
+
+# Transcription settings
+[transcription]
+enabled = true
+
+# Maximum file size in MB before compression (OpenAI limit is 25MB)
+max_file_size_mb = 25
+
+# Compression bitrate for large files (e.g., "64k", "96k", "128k")
+compression_bitrate = "64k"
+
+# LLM analysis settings
+[analysis]
+# Model to use for vocal style analysis
+# Options: gpt-4.1-nano, gpt-4o-mini, gpt-4o, etc.
+llm_model = "gpt-4.1-nano"
+
+# Use fallback analysis if LLM API fails
+fallback_on_error = true
+
+# Output settings
+[output]
+# Output format for analysis (currently only markdown supported)
+format = "markdown"
+
+# Include pitch distribution plot in output
+include_pitch_plot = true
+
+# Quiet mode - minimize console output
+quiet_mode = false

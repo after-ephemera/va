@@ -1,5 +1,6 @@
 import argparse
 import os
+from .config import Config
 from .vocal_extractor import extract_vocals, extract_all_stems, get_model_stem_info
 from .transcriber import transcribe_audio
 from .feature_extractor import extract_features
@@ -16,14 +17,19 @@ def main():
     parser.add_argument("-o", "--output_dir", help="Output directory", default=None)
     parser.add_argument("-q", "--quiet", action="store_true", help="Run in quiet mode")
     parser.add_argument(
+        "--config",
+        help="Path to config file (default: looks in current dir and ~/.config/vocal-analyzer/)",
+        default=None,
+    )
+    parser.add_argument(
         "--all-stems",
         action="store_true",
         help="Extract all available stems from the audio instead of just vocals",
     )
     parser.add_argument(
         "--model",
-        default="htdemucs_6s.yaml",
-        help="Model to use for separation (default: model_bs_roformer_ep_317_sdr_12.9755.ckpt)",
+        default=None,
+        help="Model to use for separation (overrides config)",
     )
     parser.add_argument(
         "--list-models",
@@ -31,6 +37,9 @@ def main():
         help="List available models and their supported stems",
     )
     args = parser.parse_args()
+
+    # Load configuration
+    config = Config(config_path=args.config)
 
     # Handle list models option
     if args.list_models:
@@ -92,62 +101,88 @@ def main():
         os.makedirs(output_dir)
 
     try:
-        if args.all_stems:
-            # Extract all available stems
-            if not args.quiet:
-                print(f"Extracting all stems using model: {args.model}")
+        # Determine which model to use (CLI arg overrides config)
+        model = args.model if args.model else config.extraction["model"]
+        extract_all = args.all_stems or config.extraction["extract_all_stems"]
+        quiet = args.quiet or config.output["quiet_mode"]
 
-                # Show what stems this model can produce
-                model_info = get_model_stem_info(args.model)
-                if model_info:
-                    stems_list = [
-                        stem.split("(")[0].strip().rstrip("*").strip()
-                        for stem in model_info["Stems"]
-                    ]
-                    print(f"This model can produce: {', '.join(stems_list)}")
+        # Extract vocals/stems if enabled
+        if config.is_enabled("vocal_extraction"):
+            if extract_all:
+                # Extract all available stems
+                if not quiet:
+                    print(f"Extracting all stems using model: {model}")
 
-            stem_files = extract_all_stems(args.input_file, output_dir, args.model)
+                    # Show what stems this model can produce
+                    model_info = get_model_stem_info(model)
+                    if model_info:
+                        stems_list = [
+                            stem.split("(")[0].strip().rstrip("*").strip()
+                            for stem in model_info["Stems"]
+                        ]
+                        print(f"This model can produce: {', '.join(stems_list)}")
 
-            if not args.quiet:
-                print("All stems extracted successfully:")
-                for stem_name, file_path in stem_files.items():
-                    print(f"  {stem_name}: {os.path.basename(file_path)}")
+                stem_files = extract_all_stems(args.input_file, output_dir, model)
 
-            # For analysis, we still need the vocals file specifically
-            vocal_file = stem_files.get("vocals") or stem_files.get("Vocals")
-            if not vocal_file:
-                # If no vocals stem, try to find the best one for analysis
-                if "vocal" in stem_files:
-                    vocal_file = stem_files["vocal"]
-                else:
-                    # Use the first available stem as fallback
-                    vocal_file = next(iter(stem_files.values()))
-                    if not args.quiet:
-                        print(
-                            f"No vocals stem found, using {list(stem_files.keys())[0]} for analysis"
-                        )
+                if not quiet:
+                    print("All stems extracted successfully:")
+                    for stem_name, file_path in stem_files.items():
+                        print(f"  {stem_name}: {os.path.basename(file_path)}")
 
-            output_files_list = list(stem_files.values())
+                # For analysis, we still need the vocals file specifically
+                vocal_file = stem_files.get("vocals") or stem_files.get("Vocals")
+                if not vocal_file:
+                    # If no vocals stem, try to find the best one for analysis
+                    if "vocal" in stem_files:
+                        vocal_file = stem_files["vocal"]
+                    else:
+                        # Use the first available stem as fallback
+                        vocal_file = next(iter(stem_files.values()))
+                        if not quiet:
+                            print(
+                                f"No vocals stem found, using {list(stem_files.keys())[0]} for analysis"
+                            )
+
+                output_files_list = list(stem_files.values())
+            else:
+                # Extract vocals only (original behavior)
+                vocal_file = extract_vocals(args.input_file, output_dir, model)
+                output_files_list = [vocal_file]
         else:
-            # Extract vocals only (original behavior)
-            vocal_file = extract_vocals(args.input_file, output_dir)
-            output_files_list = [vocal_file]
+            # Skip extraction, assume vocal file already exists
+            if not quiet:
+                print("Vocal extraction disabled, looking for existing vocal file...")
+            vocal_file = args.input_file
+            output_files_list = []
 
-        # Transcribe vocals (or the chosen stem for analysis)
-        transcription = transcribe_audio(vocal_file)
+        # Transcribe vocals if enabled
+        transcription = ""
+        if config.is_enabled("transcription"):
+            transcription = transcribe_audio(vocal_file)
+        elif not quiet:
+            print("Transcription disabled, skipping...")
 
-        # Extract features
+        # Extract features (always needed for range analysis)
         features = extract_features(vocal_file)
 
         # Find musical key
         key_info = find_key(args.input_file)
 
-        # Initialize and run analyzers
-        range_analyzer = RangeAnalyzer(vocal_file, output_dir)
-        range_results = range_analyzer.analyze()
+        # Initialize and run range analyzer if enabled
+        range_results = {}
+        if config.is_enabled("range_analysis"):
+            range_analyzer = RangeAnalyzer(vocal_file, output_dir)
+            range_results = range_analyzer.analyze()
+        elif not quiet:
+            print("Range analysis disabled, skipping...")
 
-        llm_analyzer = LLMAnalyzer(transcription, features)
-        llm_results = llm_analyzer.analyze()
+        # Run LLM analysis if enabled
+        llm_results = ""
+        if config.is_enabled("llm_analysis"):
+            llm_analyzer = LLMAnalyzer(transcription, features)
+            llm_results = llm_analyzer.analyze()
+        elif not quiet:
+            print("LLM analysis disabled, skipping...")
 
         # Generate output
         analysis_file = generate_output(

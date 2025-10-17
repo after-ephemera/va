@@ -1,0 +1,10 @@
+# Test config with LLM analysis disabled
+[features]
+vocal_extraction = true
+transcription = true
+range_analysis = true
+llm_analysis = false  # Disable LLM analysis for testing
+pitch_visualization = true
+
+[output]
+quiet_mode = false
