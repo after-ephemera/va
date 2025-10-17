@@ -29,6 +29,7 @@ class Config:
             "range_analysis": True,
             "llm_analysis": True,
             "pitch_visualization": True,
+            "key_detection": True,
         }
 
         self.extraction = {

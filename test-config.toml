@@ -1,10 +1,11 @@
-# Test config with LLM analysis disabled
+# Test config with LLM and key detection disabled
 [features]
 vocal_extraction = true
 transcription = true
 range_analysis = true
 llm_analysis = false  # Disable LLM analysis for testing
 pitch_visualization = true
+key_detection = false  # Disable key detection for testing
 
 [output]
 quiet_mode = false

@@ -8,6 +8,7 @@ transcription = true         # Transcribe lyrics using Whisper
 range_analysis = true        # Analyze vocal range and pitch
 llm_analysis = true         # Use LLM for style analysis
 pitch_visualization = true   # Generate pitch distribution plots
+key_detection = true         # Detect musical key using Krumhansl-Schmuckler algorithm
 
 # Vocal extraction settings
 [extraction]

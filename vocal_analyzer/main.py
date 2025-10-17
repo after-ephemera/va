@@ -7,6 +7,7 @@ from .feature_extractor import extract_features
 from .range_analyzer import RangeAnalyzer
 from .llm_analyzer import LLMAnalyzer
 from .output_generator import generate_output
+from .key_finder import find_key
 
 
 def main():
@@ -164,6 +165,13 @@ def main():
         # Extract features (always needed for range analysis)
         features = extract_features(vocal_file)
 
+        # Find musical key if enabled
+        key_info = None
+        if config.is_enabled("key_detection"):
+            key_info = find_key(args.input_file)
+        elif not quiet:
+            print("Key detection disabled, skipping...")
+
         # Initialize and run range analyzer if enabled
         range_results = {}
         if config.is_enabled("range_analysis"):
@@ -182,7 +190,7 @@ def main():
 
         # Generate output
         analysis_file = generate_output(
-            output_dir, range_results, llm_results, args.input_file
+            output_dir, range_results, llm_results, args.input_file, key_info, transcription
         )
 
         # Print summary
