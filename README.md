@@ -30,6 +30,28 @@ cd /path/to/va
 uv pip install -e .
 ```
 
+## Configuration
+
+Vocal Analyzer can be configured using a TOML configuration file to enable/disable features and customize behavior.
+
+### Config File Locations
+
+The tool looks for config files in the following order:
+1. Path specified with `--config` argument
+2. `config.toml` in the current directory
+3. `~/.config/vocal-analyzer/config.toml`
+
+### Creating a Config File
+
+Copy the example config and customize it:
+
+```bash
+cp config.example.toml config.toml
+# Edit config.toml to enable/disable features
+```
+
+See `config.example.toml` for all available options.
+
 ## Usage
 
 ### Basic Usage - Extract and Analyze Vocals
@@ -45,6 +67,12 @@ This will:
 4. Generate an analysis report
 
 Output files will be created in a new directory: `audio-analysis/` next to your input file.
+
+### Using a Custom Config File
+
+```bash
+va path/to/audio.mp3 --config my-config.toml
+```
 
 ### Extract All Stems
 

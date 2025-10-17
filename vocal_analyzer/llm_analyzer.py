@@ -1,4 +1,5 @@
-import openai
+from openai import OpenAI
+import os
 import logging
 
 
@@ -49,15 +50,19 @@ class LLMAnalyzer:
         )
 
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-4.1-nano", messages=[{"role": "user", "content": prompt}]
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                logging.warning("OPENAI_API_KEY not set - using fallback analysis")
+                return self._generate_fallback_analysis()
+
+            client = OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model="gpt-4.1-nano",
+                messages=[{"role": "user", "content": prompt}]
             )
-            return response["choices"][0]["message"]["content"]
-        except openai.error.OpenAIError as e:
-            logging.warning(f"OpenAI API error occurred: {e}")
-            return self._generate_fallback_analysis()
+            return response.choices[0].message.content
         except Exception as e:
-            logging.warning(f"Unexpected error during LLM analysis: {e}")
+            logging.warning(f"Error during LLM analysis: {e}")
             return self._generate_fallback_analysis()
 
     def _generate_fallback_analysis(self):
